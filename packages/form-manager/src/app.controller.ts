@@ -41,11 +41,14 @@ type PrefillDto = {
 
 @Controller()
 export class AppController {
+  getHello(): any {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly appService: AppService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   MINIO_ENDPOINT = this.configService.get('MINIO_ENDPOINT');
   MINIO_URL = this.configService.get('MINIO_URL');
@@ -241,6 +244,15 @@ export class AppController {
     return parser.toJson(xml.xml);
   }
 
+  // form list vinay start
+
+  @Get('formlist')
+  async formList(@Query('form-id') formId: string) {
+    return await this.appService.getFormList(formId);
+  }
+
+  //  form list vinay end
+
   @Get('osceForm/:type/:year/:speciality?')
   getOsceForm(
     @Param('type') type,
@@ -275,7 +287,7 @@ export class AppController {
       port: parseInt(this.configService.get('MINIO_PORT')),
       useSSL: this.configService.get('MINIO_USE_SSL') === true,
       accessKey: this.configService.get('MINIO_USERNAME'),
-      secretKey: this.configService.get('MINIO_PASSWORD')
+      secretKey: this.configService.get('MINIO_PASSWORD'),
     });
 
     const metaData: ItemBucketMetadata = {
@@ -290,7 +302,7 @@ export class AppController {
       metaData,
       function (err, res) {
         if (err) {
-          console.log(err)
+          console.log(err);
           throw new HttpException(
             'Error uploading file',
             HttpStatus.BAD_REQUEST,
@@ -299,7 +311,9 @@ export class AppController {
       },
     );
 
-    const fileURL = `${this.MINIO_URL}/${this.configService.get('MINIO_BUCKETNAME')}/${fileName}`;
+    const fileURL = `${this.MINIO_URL}/${this.configService.get(
+      'MINIO_BUCKETNAME',
+    )}/${fileName}`;
 
     console.log('Uploaded File:', fileURL);
 

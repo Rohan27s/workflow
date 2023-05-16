@@ -1,7 +1,9 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DOMParser } from 'xmldom';
 import * as fs from 'fs';
 import { join } from 'path';
+import Xform from './xform';
+import libxmljs from 'libxmljs';
 
 @Injectable()
 export class AppService {
@@ -307,5 +309,24 @@ export class AppService {
       console.error(e);
       console.log('Update Done');
     }
+  }
+
+  async getFormList(formId: string) {
+    const form = libxmljs.Document();
+    const formFilePath = join(__dirname, `forms/${formId}.xml`);
+    const xform = form.node('xforms');
+    xform.namespace('http://openrosa.org/xforms/xformsList');
+    let file = fs.readFileSync(formFilePath);
+    const id = formFilePath.substring(0, file.length - 4);
+    const formObject = await new Xform(id, formFilePath).getProperties(
+      formFilePath,
+    );
+    if (formObject) {
+      for (const property in formObject) {
+        xform.node(property, formObject[property]);
+      }
+    }
+
+    return [xform].toString();
   }
 }
